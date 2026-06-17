@@ -78,7 +78,7 @@ ${message || 'No message provided'}
       `.trim(),
     });
 
-    // Confirmation to submitter — swallow errors so a delivery failure doesn't surface as a form error
+    // Confirmation to submitter — log errors but don't surface to user
     resend.emails.send({
       from: FROM_EMAIL,
       to: email.trim(),
@@ -114,7 +114,10 @@ wilsonandreina@yahoo.com | (956) 640-6220
   </div>
 </div>
       `.trim(),
-    });
+    }).then(result => {
+      if (result.error) console.error('Confirmation email error:', result.error);
+      else console.log('Confirmation sent, id:', result.data?.id);
+    }).catch(err => console.error('Confirmation email exception:', err));
 
     return res.status(200).json({ success: true });
   } catch (err) {
