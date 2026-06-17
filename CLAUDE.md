@@ -40,7 +40,7 @@ Static portfolio/marketing website for Makeup & Hair by Andreina LLC — an on-l
 - **Email:** wilsonandreina@yahoo.com
 - **Instagram:** @makeupandhairbyandreinallc
 - **TikTok:** @makeupandhairbyandreina
-- **Location:** DFW TX area (exact city/suburb [NEEDED])
+- **Location:** Rockwall, TX (DFW area) — home studio + travels to venues
 
 ## Services (from intake seed context)
 1. Bridal hair & makeup — elegant, romantic, professional
