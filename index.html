@@ -73,6 +73,8 @@
 <style>
   #site-nav { transition: background 0.35s, backdrop-filter 0.35s, border-color 0.35s; }
   #site-nav.scrolled { background: rgba(255,250,248,0.97) !important; backdrop-filter: blur(8px) !important; border-bottom-color: rgba(59,26,58,0.08) !important; }
+  #site-nav:not(.scrolled) .display-italic { color: #7a4a10 !important; }
+  #site-nav:not(.scrolled) .desktop-nav svg { filter: drop-shadow(0 1px 2px rgba(0,0,0,0.18)); }
 </style>
 <nav id="site-nav" style="position:fixed;top:0;left:0;right:0;z-index:100;background:transparent;backdrop-filter:none;border-bottom:1px solid transparent;">
   <div class="section-wrap" style="height:72px;display:flex;align-items:center;justify-content:space-between;">
@@ -386,7 +388,17 @@
 <script>
   (function() {
     var nav = document.getElementById('site-nav');
-    function update() { nav.classList.toggle('scrolled', window.scrollY > 60); }
+    var icons = nav.querySelectorAll('.desktop-nav a[aria-label]');
+    function update() {
+      var scrolled = window.scrollY > 60;
+      nav.classList.toggle('scrolled', scrolled);
+      icons.forEach(function(el) { el.style.opacity = scrolled ? '' : '1'; });
+    }
+    icons.forEach(function(el) {
+      el.addEventListener('mouseout', function() {
+        if (!nav.classList.contains('scrolled')) this.style.opacity = '1';
+      });
+    });
     window.addEventListener('scroll', update, { passive: true });
     update();
   })();
