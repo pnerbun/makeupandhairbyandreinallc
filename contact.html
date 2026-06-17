@@ -134,34 +134,34 @@
         <div class="gold-rule fade-up"></div>
         <h2 class="display fade-up" style="font-size:clamp(24px,3.5vw,42px);color:var(--ink);margin-bottom:32px;">TELL ME ABOUT<br>YOUR EVENT</h2>
 
-        <!--
-          FORM NOTE: This form currently uses mailto: action as a fallback.
-          For production: connect to Formspree (https://formspree.io), Netlify Forms,
-          or a Vercel API route for real email delivery.
-          Replace action="mailto:..." with the service endpoint.
-        -->
-        <form action="mailto:wilsonandreina@yahoo.com" method="POST" enctype="text/plain" style="display:flex;flex-direction:column;gap:20px;" class="fade-up">
+        <div id="form-success" style="display:none;padding:40px 0;">
+          <p style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;color:var(--brand);margin:0 0 12px;">Thank You!</p>
+          <div class="gold-rule" style="margin-bottom:16px;"></div>
+          <p style="font-size:14px;line-height:1.9;color:#4a3542;margin:0;">Your inquiry has been received. Andreina will get back to you within 2 business days to check availability and discuss your event.</p>
+        </div>
+
+        <form id="contact-form" style="display:flex;flex-direction:column;gap:20px;" class="fade-up" novalidate>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
             <div class="form-field">
               <label for="fname">First Name</label>
-              <input type="text" id="fname" name="First Name" placeholder="Your first name" required>
+              <input type="text" id="fname" placeholder="Your first name" required>
             </div>
             <div class="form-field">
               <label for="lname">Last Name</label>
-              <input type="text" id="lname" name="Last Name" placeholder="Your last name">
+              <input type="text" id="lname" placeholder="Your last name">
             </div>
           </div>
           <div class="form-field">
             <label for="email">Email Address</label>
-            <input type="email" id="email" name="Email" placeholder="your@email.com" required>
+            <input type="email" id="email" placeholder="your@email.com" required>
           </div>
           <div class="form-field">
             <label for="phone">Phone / Text Number</label>
-            <input type="tel" id="phone" name="Phone" placeholder="(555) 000-0000">
+            <input type="tel" id="phone" placeholder="(555) 000-0000">
           </div>
           <div class="form-field">
             <label for="event-type">Event Type</label>
-            <select id="event-type" name="Event Type" required>
+            <select id="event-type" required>
               <option value="" disabled selected>Select event type</option>
               <option value="Wedding">Wedding — Bridal Hair &amp; Makeup</option>
               <option value="Quinceañera">Quinceañera</option>
@@ -173,17 +173,17 @@
           </div>
           <div class="form-field">
             <label for="event-date">Event Date</label>
-            <input type="date" id="event-date" name="Event Date">
+            <input type="date" id="event-date">
           </div>
           <div class="form-field">
             <label for="location">Event Location / City</label>
-            <input type="text" id="location" name="Location" placeholder="City or venue name">
+            <input type="text" id="location" placeholder="City or venue name">
           </div>
           <div class="form-field">
             <label for="party-size">Party Size (including yourself)</label>
-            <select id="party-size" name="Party Size">
+            <select id="party-size">
               <option value="" disabled selected>How many people need services?</option>
-              <option value="1">Just me</option>
+              <option value="Just me">Just me</option>
               <option value="2-4">2–4 people</option>
               <option value="5-8">5–8 people</option>
               <option value="9+">9+ people</option>
@@ -191,11 +191,52 @@
           </div>
           <div class="form-field">
             <label for="message">Anything Else I Should Know</label>
-            <textarea id="message" name="Message" placeholder="Style direction, inspiration, questions, special requests..."></textarea>
+            <textarea id="message" placeholder="Style direction, inspiration, questions, special requests..."></textarea>
           </div>
-          <button type="submit" class="btn btn-dark" style="align-self:flex-start;">Send My Request</button>
+          <div id="form-error" style="display:none;font-size:13px;color:#b91c1c;padding:12px 16px;background:#fef2f2;border:1px solid #fecaca;"></div>
+          <button type="submit" id="submit-btn" class="btn btn-dark" style="align-self:flex-start;">Send My Request</button>
           <p style="font-size:11px;color:var(--muted);margin:0;">I typically respond within 2 business days. For urgent inquiries, call or text <a href="tel:+19566406220" style="color:var(--brand);">(956) 640-6220</a>.</p>
         </form>
+
+        <script>
+          document.getElementById('contact-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const errBox = document.getElementById('form-error');
+            btn.textContent = 'Sending…';
+            btn.disabled = true;
+            errBox.style.display = 'none';
+
+            const data = {
+              firstName:  document.getElementById('fname').value,
+              lastName:   document.getElementById('lname').value,
+              email:      document.getElementById('email').value,
+              phone:      document.getElementById('phone').value,
+              eventType:  document.getElementById('event-type').value,
+              eventDate:  document.getElementById('event-date').value,
+              location:   document.getElementById('location').value,
+              partySize:  document.getElementById('party-size').value,
+              message:    document.getElementById('message').value,
+            };
+
+            try {
+              const res = await fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+              });
+              const json = await res.json();
+              if (!res.ok) throw new Error(json.error || 'Submission failed.');
+              document.getElementById('contact-form').style.display = 'none';
+              document.getElementById('form-success').style.display = 'block';
+            } catch (err) {
+              errBox.textContent = err.message;
+              errBox.style.display = 'block';
+              btn.textContent = 'Send My Request';
+              btn.disabled = false;
+            }
+          });
+        </script>
       </div>
 
       <div>
