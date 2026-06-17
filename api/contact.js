@@ -2,8 +2,7 @@ const { Resend } = require('resend');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const TO_EMAIL = process.env.CONTACT_EMAIL || 'wilsonandreina@yahoo.com';
-// Update FROM_EMAIL to 'noreply@makeupandhairbyandreina.com' once domain is verified in Resend
-const FROM_EMAIL = 'Makeup & Hair by Andreina <onboarding@resend.dev>';
+const FROM_EMAIL = 'Makeup & Hair by Andreina <noreply@makeupandhairbyandreina.com>';
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
