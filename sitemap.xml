@@ -31,4 +31,9 @@
     <priority>0.8</priority>
   </url>
   <!-- Blog posts added below as published -->
+  <url>
+    <loc>https://makeupandhairbyandreina.com/blog/quinceanera-makeup-vs-bridal-makeup-differences.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
 </urlset>
