@@ -4,6 +4,14 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const TO_EMAIL = process.env.CONTACT_EMAIL || 'wilsonandreina@yahoo.com';
 const FROM_EMAIL = 'Makeup & Hair by Andreina <noreply@makeupandhairbyandreina.com>';
 
+// Escape user-supplied values before interpolating into email HTML.
+const esc = (v) => String(v ?? '')
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;');
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -16,7 +24,15 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: 'Invalid request.' });
   }
 
-  const { firstName, lastName, email, phone, eventType, eventDate, location, partySize, message } = body || {};
+  body = body || {};
+
+  // Honeypot: the `company` field is hidden from real users. If it's filled,
+  // the request is from a bot — silently accept (so it doesn't retry) and drop.
+  if (body.company && String(body.company).trim()) {
+    return res.status(200).json({ success: true });
+  }
+
+  const { firstName, lastName, email, phone, eventType, eventDate, location, partySize, message } = body;
 
   if (!firstName?.trim() || !email?.trim()) {
     return res.status(400).json({ error: 'Name and email are required.' });
@@ -28,18 +44,19 @@ module.exports = async (req, res) => {
   }
 
   const name = [firstName.trim(), lastName?.trim()].filter(Boolean).join(' ');
+  const emailClean = email.trim();
 
   try {
     await resend.emails.send({
       from: FROM_EMAIL,
       to: TO_EMAIL,
-      replyTo: email.trim(),
+      replyTo: emailClean,
       subject: `New Inquiry — ${name} · ${eventType || 'General'}`,
       text: `
 New inquiry from makeupandhairbyandreina.com
 
 Name: ${name}
-Email: ${email.trim()}
+Email: ${emailClean}
 Phone: ${phone || 'Not provided'}
 Event Type: ${eventType || 'Not provided'}
 Event Date: ${eventDate || 'Not provided'}
@@ -57,18 +74,18 @@ ${message || 'No message provided'}
   </div>
   <div style="padding:32px;background:#fff;">
     <table style="width:100%;font-family:Arial,sans-serif;font-size:14px;border-collapse:collapse;">
-      <tr><td style="padding:8px 0;color:#888;width:140px;">Name</td><td style="padding:8px 0;font-weight:500;">${name}</td></tr>
-      <tr><td style="padding:8px 0;color:#888;">Email</td><td style="padding:8px 0;"><a href="mailto:${email.trim()}" style="color:#C8A06A;">${email.trim()}</a></td></tr>
-      <tr><td style="padding:8px 0;color:#888;">Phone</td><td style="padding:8px 0;">${phone || 'Not provided'}</td></tr>
-      <tr><td style="padding:8px 0;color:#888;">Event Type</td><td style="padding:8px 0;">${eventType || 'Not provided'}</td></tr>
-      <tr><td style="padding:8px 0;color:#888;">Event Date</td><td style="padding:8px 0;">${eventDate || 'Not provided'}</td></tr>
-      <tr><td style="padding:8px 0;color:#888;">Location</td><td style="padding:8px 0;">${location || 'Not provided'}</td></tr>
-      <tr><td style="padding:8px 0;color:#888;">Party Size</td><td style="padding:8px 0;">${partySize || 'Not provided'}</td></tr>
+      <tr><td style="padding:8px 0;color:#888;width:140px;">Name</td><td style="padding:8px 0;font-weight:500;">${esc(name)}</td></tr>
+      <tr><td style="padding:8px 0;color:#888;">Email</td><td style="padding:8px 0;"><a href="mailto:${esc(emailClean)}" style="color:#C8A06A;">${esc(emailClean)}</a></td></tr>
+      <tr><td style="padding:8px 0;color:#888;">Phone</td><td style="padding:8px 0;">${esc(phone) || 'Not provided'}</td></tr>
+      <tr><td style="padding:8px 0;color:#888;">Event Type</td><td style="padding:8px 0;">${esc(eventType) || 'Not provided'}</td></tr>
+      <tr><td style="padding:8px 0;color:#888;">Event Date</td><td style="padding:8px 0;">${esc(eventDate) || 'Not provided'}</td></tr>
+      <tr><td style="padding:8px 0;color:#888;">Location</td><td style="padding:8px 0;">${esc(location) || 'Not provided'}</td></tr>
+      <tr><td style="padding:8px 0;color:#888;">Party Size</td><td style="padding:8px 0;">${esc(partySize) || 'Not provided'}</td></tr>
     </table>
     ${message ? `
     <div style="margin-top:24px;padding-top:24px;border-top:1px solid #eee;">
       <p style="font-size:12px;color:#888;font-family:Arial,sans-serif;margin:0 0 8px;text-transform:uppercase;letter-spacing:1px;">Message</p>
-      <p style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;margin:0;">${message}</p>
+      <p style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;margin:0;">${esc(message).replace(/\n/g, '<br>')}</p>
     </div>` : ''}
   </div>
   <div style="padding:16px 32px;background:#F2DDD8;font-family:Arial,sans-serif;font-size:12px;color:#aaa;">
@@ -81,13 +98,13 @@ ${message || 'No message provided'}
     // Confirmation to submitter — log errors but don't surface to user
     resend.emails.send({
       from: FROM_EMAIL,
-      to: email.trim(),
+      to: emailClean,
       replyTo: TO_EMAIL,
       subject: 'Your inquiry was received — Makeup & Hair by Andreina',
       text: `
 Hi ${firstName.trim()},
 
-Thank you for reaching out! I've received your inquiry and will get back to you within 2 business days to check availability and discuss your event.
+Thank you for reaching out! I've received your inquiry and will get back to you promptly to check availability and discuss your event.
 
 In the meantime, feel free to browse my gallery or follow along on Instagram @makeupandhairbyandreinallc.
 
@@ -99,11 +116,11 @@ wilsonandreina@yahoo.com | (956) 640-6220
       html: `
 <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;color:#1E1218;">
   <div style="background:#F2DDD8;padding:32px;border-top:3px solid #C8A06A;">
-    <h1 style="font-size:22px;font-weight:400;margin:0 0 4px;">Thank you, ${firstName.trim()}!</h1>
+    <h1 style="font-size:22px;font-weight:400;margin:0 0 4px;">Thank you, ${esc(firstName.trim())}!</h1>
     <p style="font-size:13px;color:#888;margin:0;font-family:Arial,sans-serif;">Makeup &amp; Hair by Andreina &nbsp;·&nbsp; Rockwall, TX</p>
   </div>
   <div style="padding:32px;background:#fff;font-family:Arial,sans-serif;font-size:14px;line-height:1.7;color:#444;">
-    <p>I've received your inquiry and will be in touch within <strong>2 business days</strong> to check availability and discuss your event.</p>
+    <p>I've received your inquiry and will be in touch <strong>promptly</strong> to check availability and discuss your event.</p>
     <p>In the meantime, feel free to browse my gallery or follow along on Instagram for the latest looks and behind-the-scenes moments.</p>
     <p style="margin-top:32px;">
       <a href="https://www.instagram.com/makeupandhairbyandreinallc" style="color:#C8A06A;text-decoration:none;">@makeupandhairbyandreinallc on Instagram</a>

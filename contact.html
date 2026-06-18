@@ -197,6 +197,11 @@
             <label for="message">Anything Else I Should Know</label>
             <textarea id="message" placeholder="Style direction, inspiration, questions, special requests..."></textarea>
           </div>
+          <!-- Honeypot: hidden from real users; bots that fill it are silently dropped server-side -->
+          <div aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;">
+            <label for="company">Company</label>
+            <input type="text" id="company" name="company" tabindex="-1" autocomplete="off">
+          </div>
           <div id="form-error" style="display:none;font-size:13px;color:#b91c1c;padding:12px 16px;background:#fef2f2;border:1px solid #fecaca;"></div>
           <button type="submit" id="submit-btn" class="btn btn-dark" style="align-self:flex-start;">Send My Request</button>
           <p style="font-size:11px;color:var(--muted);margin:0;">I will promptly respond. For urgent inquiries, call or text <a href="tel:+19566406220" style="color:var(--brand);">(956) 640-6220</a>.</p>
@@ -221,6 +226,7 @@
               location:   document.getElementById('location').value,
               partySize:  document.getElementById('party-size').value,
               message:    document.getElementById('message').value,
+              company:    document.getElementById('company').value, // honeypot
             };
 
             try {
@@ -338,7 +344,7 @@
     </div>
     <style>@media (min-width:768px){ .footer-grid { grid-template-columns:2fr 1fr 1fr !important; } }</style>
     <div style="border-top:1px solid rgba(242,221,216,0.08);padding-top:28px;text-align:center;">
-      <p style="font-size:11px;color:rgba(255,255,255,0.4);margin:0;">&copy; 2026 Makeup &amp; Hair by Andreina LLC. All rights reserved.</p>
+      <p style="font-size:11px;color:rgba(255,255,255,0.4);margin:0;">&copy; 2026 Makeup &amp; Hair by Andreina LLC. All rights reserved. &nbsp;&middot;&nbsp; <a href="privacy.html" style="color:inherit;text-decoration:underline;">Privacy Policy</a></p>
     </div>
   </div>
 </footer>
